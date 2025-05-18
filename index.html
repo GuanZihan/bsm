@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="description"
+        content="Benign Samples Matter! Fine-tuning On Outlier Benign Samples Severely Breaks Safety">
+  <meta name="keywords" content="Nerfies, D-NeRF, NeRF">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Benign Samples Matter! Fine-tuning On Outlier Benign Samples Severely Breaks Safety</title>
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-PYVRSFMDRL"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+
+    gtag('js', new Date());
+
+    gtag('config', 'G-PYVRSFMDRL');
+  </script>
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
+        rel="stylesheet">
+
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <link rel="icon" href="./static/images/favicon.svg">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script src="./static/js/bulma-carousel.min.js"></script>
+  <script src="./static/js/bulma-slider.min.js"></script>
+  <script src="./static/js/index.js"></script>
+</head>
+<body>
+
+<!-- <nav class="navbar" role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+    </a>
+  </div>
+  <div class="navbar-menu">
+    <div class="navbar-start" style="flex-grow: 1; justify-content: center;">
+      <a class="navbar-item" href="https://guanzihan.github.io/">
+      <span class="icon">
+          <i class="fas fa-home"></i>
+      </span>
+      </a>
+
+      
+    </div>
+
+  </div>
+</nav> -->
+
+
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <h1 class="title is-1 publication-title">Benign Samples Matter! Fine-tuning On Outlier Benign Samples Severely Breaks Safety</h1>
+          <div class="is-size-5 publication-authors">
+            <span class="author-block">
+              <a href="https://guanzihan.github.io/">Zihan Guan</a><sup>1*</sup>,</span>
+            <span class="author-block">
+              <a href="https://xuanxuan03021.github.io/">Mengxuan Hu</a><sup>1*</sup>,</span>
+            <span class="author-block">
+              <a href="https://scholar.google.com/citations?user=GXKTwzwAAAAJ&hl=en">Ronghang Zhu</a><sup>2</sup>,
+            </span>
+            <span class="author-block">
+              <a href="https://sheng-li.org/">Sheng Li</a><sup>1#</sup>,
+            </span>
+            <span class="author-block">
+              <a href="https://biocomplexity.virginia.edu/our-team/anil-vullikanti">Anil Vullikanti</a><sup>1#</sup>,
+            </span>
+          </div>
+
+          <div class="is-size-5 publication-authors">
+            <span class="author-block"><sup>1</sup>University of Virginia,</span>
+            <span class="author-block"><sup>2</sup>University of Georgia</span>
+
+            
+          </div>
+
+          <div>
+            <span class="author-block"><sup>*</sup>Equal contribution</span>
+            <span class="author-block"><sup>#</sup>Co-advising</span>
+          </div>
+
+          <div class="column has-text-centered">
+            <div class="publication-links">
+              <!-- PDF Link. -->
+              <span class="link-block">
+                <a href="https://arxiv.org/abs/2505.06843"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="ai ai-arxiv"></i>
+                  </span>
+                  <span>arXiv</span>
+                </a>
+              </span>
+              <!-- Code Link. -->
+              <span class="link-block">
+                <a href="https://github.com/GuanZihan/Benign-Samples-Matter"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="fab fa-github"></i>
+                  </span>
+                  <span>Code</span>
+                  </a>
+              </span>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <!-- Abstract. -->
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+            Recent studies have uncovered a troubling vulnerability in the fine-tuning stage of large language models (LLMs):  even fine-tuning on entirely benign datasets can lead to a significant increase in the harmfulness of LLM outputs. Building on this finding, our red teaming study takes this threat one step further by developing a more effective attack. Specifically, we analyze and identify samples within benign datasets that contribute most to safety degradation, then fine-tune LLMs exclusively on these samples. We approach this problem from an outlier detection perspective and propose Self-Inf-N, to detect and extract outliers for fine-tuning. Our findings reveal that fine-tuning LLMs on 100 outlier samples selected by Self-Inf-N in the benign datasets severely compromises LLM safety alignment. Extensive experiments across seven mainstream LLMs demonstrate that our attack exhibits high transferability across different architectures and remains effective in practical scenarios. Alarmingly, our results indicate that most existing mitigation strategies fail to defend against this attack, underscoring the urgent need for more robust alignment safeguards.
+          </p>
+        </div>
+      </div>
+    </div>
+    <!--/ Abstract. -->
+  </div>
+</section>
+
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <!-- Abstract. -->
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Motivation</h2>
+        <div class="content has-text-justified">
+          <img src="./static/images/pipeline.png" alt="Pipeline" style="width: 100%; height: auto; margin: 20px 0;">
+          <p>
+            To align the LLMs with human value, techniques such as RLHF and DPO are commonly applied before releasing them to the public. During this alignment stage, LLMs learn to reject harmful queries, ensuring their behavior remains well within a defined safety scope. As a result, for an aligned LLM, clean and safe samples lie comfortably within the safety distribution, while harmful samples become ``outlier'' samples that lie outside the safety scope. Based on this intuition, we hypothesize that certain outlier samples within benign datasets, while appearing semantically benign, may have a disproportionately high potential to push the LLM's parameters into undesirable harmful zones during fine-tuning.
+          </p>
+          
+          <p>
+            To evaluate the impact of a training point on its own loss, which is useful for outlier detection, we substitute <i>z'</i> with <i>z</i>. The function <span style="font-family: 'Courier New', Courier, monospace;">Inf(<i>z</i>, <i>z'</i>)</span> is then expressed as follows:
+          </p>
+          <div style="text-align: center; margin: 20px 0;">
+            <p>
+              Self-Inf(<i>z</i>) = ⟨∇<sub>θ</sub>π<sub>θ</sub>(<i>z</i>), ∇<sub>θ</sub>π<sub>θ</sub>(<i>z</i>)⟩
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!--/ Abstract. -->
+  </div>
+</section>
+
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <!-- Abstract. -->
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Fine-tuning on Outlier Samples Severely Degrades Safety Alignment</h2>
+        
+        <div class="content has-text-justified">
+          <div>
+            <h4 style="text-align: left; margin-bottom: 20px; color: #666; font-size: 1.1em;">#1 Harmfulness of Self-Inf</h4>
+            <div style="display: flex; align-items: center; border-bottom: 2px dashed #888; padding-bottom: 20px; margin-bottom: 30px;">
+              <img src="./static/images/alpaca_original.png" alt="Harmfulness" style="width: 45%; height: auto; margin-right: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+              <div style="flex-grow: 1;">
+                <p>
+                  Compared to the baseline method, where 100 random samples from the benign dataset are selected, the samples with the top 100 highest Self-Inf scores exhibit significantly higher harmfulness. This empirically demonstrates that fine-tuning on the outlier samples significantly increases the safety risk of LLMs, further validating the effectiveness of this method in compromising LLM alignment.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h4 style="text-align: left; margin-bottom: 20px; color: #666; font-size: 1.1em;">#2 Characteristics of Outlier Samples</h4>
+            <div style="display: flex; align-items: flex-start; border-bottom: 2px dashed #888; padding-bottom: 20px; margin-bottom: 30px;">
+
+              <div style="width: 45%;">
+                <div class="content has-text-justified">
+                  <div class="sample-container" style="display: flex; overflow-x: auto; gap: 20px; padding: 10px 0; scrollbar-width: thin;">
+                    <!-- Sample 1 -->
+                    <div class="sample-box" style="background-color: #f8f9fa; border-radius: 8px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); min-width: 300px; max-width: 300px; height: 320px;">
+                      <div class="sample-header" style="margin-bottom: 10px;">
+                        <h3 style="color: #2c3e50; font-size: 1.1em; margin-bottom: 8px;">Question:</h3>
+                        <p style="color: #34495e; line-height: 1.4; font-size: 0.95em;">In 1961 which Henry Mancini record won Grammy record of year</p>
+                      </div>
+                      <div class="sample-context" style="margin-bottom: 10px; padding: 10px; background-color: #fff; border-radius: 6px;">
+                        <h3 style="color: #2c3e50; font-size: 1.1em; margin-bottom: 8px;">Context:</h3>
+                        <div class="truncated-text" style="position: relative;">
+                          <p style="color: #34495e; line-height: 1.4; font-size: 0.95em; max-height: 3em; overflow: hidden; margin-bottom: 5px;">None.</p>
+                          <div style="display: flex; justify-content: flex-end;">
+                            <button onclick="toggleText(this)" style="background: none; border: none; color: #2c3e50; cursor: pointer; font-size: 0.9em; padding: 2px 8px; border-radius: 4px; transition: background-color 0.2s;">Show more</button>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="sample-answer" style="padding: 10px; background-color: #fff; border-radius: 6px;">
+                        <h3 style="color: #2c3e50; font-size: 1.1em; margin-bottom: 8px;">Answer:</h3>
+                        <div class="truncated-text" style="position: relative;">
+                          <p style="color: #34495e; line-height: 1.4; font-size: 0.95em; max-height: 3em; overflow: hidden; margin-bottom: 5px;">Moon River.</p>
+                          <div style="display: flex; justify-content: flex-end;">
+                            <button onclick="toggleText(this)" style="background: none; border: none; color: #2c3e50; cursor: pointer; font-size: 0.9em; padding: 2px 8px; border-radius: 4px; transition: background-color 0.2s;">Show more</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+
+                    <!-- Sample 1 -->
+                    <div class="sample-box" style="background-color: #f8f9fa; border-radius: 8px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); min-width: 300px; max-width: 300px; height: 320px;">
+                      <div class="sample-header" style="margin-bottom: 10px;">
+                        <h3 style="color: #2c3e50; font-size: 1.1em; margin-bottom: 8px;">Question:</h3>
+                        <p style="color: #34495e; line-height: 1.4; font-size: 0.95em;">What are the words of House Arryn?</p>
+                      </div>
+                      <div class="sample-context" style="margin-bottom: 10px; padding: 10px; background-color: #fff; border-radius: 6px;">
+                        <h3 style="color: #2c3e50; font-size: 1.1em; margin-bottom: 8px;">Context:</h3>
+                        <div class="truncated-text" style="position: relative;">
+                          <p style="color: #34495e; line-height: 1.4; font-size: 0.95em; max-height: 3em; overflow: hidden; margin-bottom: 5px;">None.</p>
+                          <div style="display: flex; justify-content: flex-end;">
+                            <button onclick="toggleText(this)" style="background: none; border: none; color: #2c3e50; cursor: pointer; font-size: 0.9em; padding: 2px 8px; border-radius: 4px; transition: background-color 0.2s;">Show more</button>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="sample-answer" style="padding: 10px; background-color: #fff; border-radius: 6px;">
+                        <h3 style="color: #2c3e50; font-size: 1.1em; margin-bottom: 8px;">Answer:</h3>
+                        <div class="truncated-text" style="position: relative;">
+                          <p style="color: #34495e; line-height: 1.4; font-size: 0.95em; max-height: 3em; overflow: hidden; margin-bottom: 5px;">As High as Honor.</p>
+                          <div style="display: flex; justify-content: flex-end;">
+                            <button onclick="toggleText(this)" style="background: none; border: none; color: #2c3e50; cursor: pointer; font-size: 0.9em; padding: 2px 8px; border-radius: 4px; transition: background-color 0.2s;">Show more</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+
+                    <!-- Sample 1 -->
+                    <div class="sample-box" style="background-color: #f8f9fa; border-radius: 8px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); min-width: 300px; max-width: 300px; height: 320px;">
+                      <div class="sample-header" style="margin-bottom: 10px;">
+                        <h3 style="color: #2c3e50; font-size: 1.1em; margin-bottom: 8px;">Question:</h3>
+                        <p style="color: #34495e; line-height: 1.4; font-size: 0.95em;">What does W stand for in the name W. Rex Black?</p>
+                      </div>
+                      <div class="sample-context" style="margin-bottom: 10px; padding: 10px; background-color: #fff; border-radius: 6px;">
+                        <h3 style="color: #2c3e50; font-size: 1.1em; margin-bottom: 8px;">Context:</h3>
+                        <div class="truncated-text" style="position: relative;">
+                          <p style="color: #34495e; line-height: 1.4; font-size: 0.95em; max-height: 3em; overflow: hidden; margin-bottom: 5px;">Wilford Rex Black (January 31, 1920 \u2013 December 12, 2012) was an American politician. Wilford Rex Black represented the 2nd Utah Senate District from 1973 to 1997. W. Rex Black, as he was often referred to, was a member of the Democratic party and represented the party as the Minority leader in the Utah Senate for many years.</p>
+                          <div style="display: flex; justify-content: flex-end;">
+                            <button onclick="toggleText(this)" style="background: none; border: none; color: #2c3e50; cursor: pointer; font-size: 0.9em; padding: 2px 8px; border-radius: 4px; transition: background-color 0.2s;">Show more</button>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="sample-answer" style="padding: 10px; background-color: #fff; border-radius: 6px;">
+                        <h3 style="color: #2c3e50; font-size: 1.1em; margin-bottom: 8px;">Answer:</h3>
+                        <div class="truncated-text" style="position: relative;">
+                          <p style="color: #34495e; line-height: 1.4; font-size: 0.95em; max-height: 3em; overflow: hidden; margin-bottom: 5px;">Wilford.</p>
+                          <div style="display: flex; justify-content: flex-end;">
+                            <button onclick="toggleText(this)" style="background: none; border: none; color: #2c3e50; cursor: pointer; font-size: 0.9em; padding: 2px 8px; border-radius: 4px; transition: background-color 0.2s;">Show more</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+
+
+                    <!-- Sample 1 -->
+                    <div class="sample-box" style="background-color: #f8f9fa; border-radius: 8px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); min-width: 300px; max-width: 300px; height: 320px;">
+                      <div class="sample-header" style="margin-bottom: 10px;">
+                        <h3 style="color: #2c3e50; font-size: 1.1em; margin-bottom: 8px;">Question:</h3>
+                        <p style="color: #34495e; line-height: 1.4; font-size: 0.95em;">Are these cities or countries: Tokyo, Riyadh, Florence, Monteverde, Nafplio</p>
+                      </div>
+                      <div class="sample-context" style="margin-bottom: 10px; padding: 10px; background-color: #fff; border-radius: 6px;">
+                        <h3 style="color: #2c3e50; font-size: 1.1em; margin-bottom: 8px;">Context:</h3>
+                        <div class="truncated-text" style="position: relative;">
+                          <p style="color: #34495e; line-height: 1.4; font-size: 0.95em; max-height: 3em; overflow: hidden; margin-bottom: 5px;">None</p>
+                          <div style="display: flex; justify-content: flex-end;">
+                            <button onclick="toggleText(this)" style="background: none; border: none; color: #2c3e50; cursor: pointer; font-size: 0.9em; padding: 2px 8px; border-radius: 4px; transition: background-color 0.2s;">Show more</button>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="sample-answer" style="padding: 10px; background-color: #fff; border-radius: 6px;">
+                        <h3 style="color: #2c3e50; font-size: 1.1em; margin-bottom: 8px;">Answer:</h3>
+                        <div class="truncated-text" style="position: relative;">
+                          <p style="color: #34495e; line-height: 1.4; font-size: 0.95em; max-height: 3em; overflow: hidden; margin-bottom: 5px;">cities.</p>
+                          <div style="display: flex; justify-content: flex-end;">
+                            <button onclick="toggleText(this)" style="background: none; border: none; color: #2c3e50; cursor: pointer; font-size: 0.9em; padding: 2px 8px; border-radius: 4px; transition: background-color 0.2s;">Show more</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+
+
+                    <!-- Sample 1 -->
+                    <div class="sample-box" style="background-color: #f8f9fa; border-radius: 8px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); min-width: 300px; max-width: 300px; height: 320px;">
+                      <div class="sample-header" style="margin-bottom: 10px;">
+                        <h3 style="color: #2c3e50; font-size: 1.1em; margin-bottom: 8px;">Question:</h3>
+                        <p style="color: #34495e; line-height: 1.4; font-size: 0.95em;">Maurice Micklewhite became famous as who</p>
+                      </div>
+                      <div class="sample-context" style="margin-bottom: 10px; padding: 10px; background-color: #fff; border-radius: 6px;">
+                        <h3 style="color: #2c3e50; font-size: 1.1em; margin-bottom: 8px;">Context:</h3>
+                        <div class="truncated-text" style="position: relative;">
+                          <p style="color: #34495e; line-height: 1.4; font-size: 0.95em; max-height: 3em; overflow: hidden; margin-bottom: 5px;">None</p>
+                          <div style="display: flex; justify-content: flex-end;">
+                            <button onclick="toggleText(this)" style="background: none; border: none; color: #2c3e50; cursor: pointer; font-size: 0.9em; padding: 2px 8px; border-radius: 4px; transition: background-color 0.2s;">Show more</button>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="sample-answer" style="padding: 10px; background-color: #fff; border-radius: 6px;">
+                        <h3 style="color: #2c3e50; font-size: 1.1em; margin-bottom: 8px;">Answer:</h3>
+                        <div class="truncated-text" style="position: relative;">
+                          <p style="color: #34495e; line-height: 1.4; font-size: 0.95em; max-height: 3em; overflow: hidden; margin-bottom: 5px;">Michael Caine.</p>
+                          <div style="display: flex; justify-content: flex-end;">
+                            <button onclick="toggleText(this)" style="background: none; border: none; color: #2c3e50; cursor: pointer; font-size: 0.9em; padding: 2px 8px; border-radius: 4px; transition: background-color 0.2s;">Show more</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+
+                    <!-- Sample 1 -->
+                    <div class="sample-box" style="background-color: #f8f9fa; border-radius: 8px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); min-width: 300px; max-width: 300px; height: 320px;">
+                      <div class="sample-header" style="margin-bottom: 10px;">
+                        <h3 style="color: #2c3e50; font-size: 1.1em; margin-bottom: 8px;">Question:</h3>
+                        <p style="color: #34495e; line-height: 1.4; font-size: 0.95em;">Best film in Motion Picture  27th Screen Actors Guild(SAG) Awards was given to which film?</p>
+                      </div>
+                      <div class="sample-context" style="margin-bottom: 10px; padding: 10px; background-color: #fff; border-radius: 6px;">
+                        <h3 style="color: #2c3e50; font-size: 1.1em; margin-bottom: 8px;">Context:</h3>
+                        <div class="truncated-text" style="position: relative;">
+                          <p style="color: #34495e; line-height: 1.4; font-size: 0.95em; max-height: 3em; overflow: hidden; margin-bottom: 5px;">None</p>
+                          <div style="display: flex; justify-content: flex-end;">
+                            <button onclick="toggleText(this)" style="background: none; border: none; color: #2c3e50; cursor: pointer; font-size: 0.9em; padding: 2px 8px; border-radius: 4px; transition: background-color 0.2s;">Show more</button>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="sample-answer" style="padding: 10px; background-color: #fff; border-radius: 6px;">
+                        <h3 style="color: #2c3e50; font-size: 1.1em; margin-bottom: 8px;">Answer:</h3>
+                        <div class="truncated-text" style="position: relative;">
+                          <p style="color: #34495e; line-height: 1.4; font-size: 0.95em; max-height: 3em; overflow: hidden; margin-bottom: 5px;">Chicago 7.</p>
+                          <div style="display: flex; justify-content: flex-end;">
+                            <button onclick="toggleText(this)" style="background: none; border: none; color: #2c3e50; cursor: pointer; font-size: 0.9em; padding: 2px 8px; border-radius: 4px; transition: background-color 0.2s;">Show more</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div style="width: 50%; padding-left: 20px;">
+                <p>
+                  We manually inspect the filtered outlier samples to investigate their key characteristics. Surprisingly, we identify a serious length bias in the selected samples: over 90% of the samples have exceptionally short token lengths.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h4 style="text-align: left; margin-bottom: 20px; color: #666; font-size: 1.1em;">#3 Influence of Samples with Short Token Lengths</h4>
+            <img src="./static/images/short_samples.png" alt="Self-Inf-N" style="width: 100%; height: auto; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+          <p>
+            When fine-tuned on samples with short token lengths (fewer than four tokens), the LLM exhibits an exceptionally high harmfulness score. The proportion of safe answers - responses that explicitly reject harmful queries - decreases significantly, indicating that short samples effectively compromise the model's safety alignment. However, this increased harmfulness comes at a cost to utility. Fine-tuning on shorter samples results in a noticeably lower utility score. For example, consider an LLM model fine-tuned on 100 samples where the answer part has a token length of just 1. When queried with the question "Could you recommend an addictive medicine?", the LLM generates a concise response: "Cocaine.", without any further description or explanation.
+          </p>
+          </div>
+
+          
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <!-- Abstract. -->
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Self-Inf-N: Normalizing Length Bias in Self-Inf</h2>
+        <div class="content has-text-justified">
+
+        <div style="display: flex; align-items: center; border-bottom: 2px dashed #888; padding-bottom: 20px; margin-bottom: 30px;">
+            <img src="./static/images/self-inf-n.png" alt="Harmfulness" style="width: 45%; height: auto; margin-right: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+            <p>
+              The harmfulness of LLMs increases significantly after fine-tuning on samples filtered with the Self-Inf-N score function, as shown in the figure. Compared to vanilla Self-Inf, Self-Inf-N selected samples demonstrate greater ability to compromise safety alignment. This validates our hypothesis that short tokens act as a shortcut in Self-Inf scoring, limiting its effectiveness at inducing real harmfulness.
+            </p>
+          </div>
+          
+        </div>
+        <div class="content has-text-justified">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <img src="./static/images/main_table.png" alt="Self-Inf-N" style="width: 48%; height: auto; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); object-fit: contain;">
+            <img src="./static/images/transferability.png" alt="Self-Inf-N" style="width: 48%; height: auto; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); object-fit: contain;">
+          </div>
+          <p>As shown, compared to the purely harmful samples in the first block, fine-tuning LLMs on our selected samples achieves comparable harmfulness levels for both datasets. This demonstrates that our attack method provides a stealthy yet effective approach for achieving high attack effectiveness. The second block shows the harmfulness scores of LLMs fine-tuned on the complete benign dataset, suggesting that the selected few samples can significantly amplify harmfulness while only minimally impacting utility performance. The third block illustrates the performance of two baseline approaches. As seen, our method achieves a notable advantage over the random selection method. More importantly, our anchor-free method even performs comparably to the Bidirectional Anchor, which additionally relies on external anchors for data selection, further demonstrating our practicability in the real world.</p>
+        </div>
+      </div>
+    </div>
+    <!--/ Abstract. -->
+  </div>
+</section>
+
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <!-- Abstract. -->
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Demo: Fine-tuning Llama-2-7B-Chat with Self-Inf-N</h2>
+        <div class="content has-text-justified">
+          
+          </div>
+        </div>
+      </div>
+    </div>
+    <!--/ Abstract. -->
+  </div>
+</section>
+
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <!-- Abstract. -->
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Isolated Samples by Self-Inf-N</h2>
+        <div class="content has-text-justified">
+          <div class="sample-container" style="display: flex; overflow-x: auto; gap: 20px; padding: 10px 0; scrollbar-width: thin;">
+            <!-- Sample 1 -->
+            <div class="sample-box" style="background-color: #f8f9fa; border-radius: 8px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); min-width: 400px; max-width: 400px; height: fit-content;">
+              <div class="sample-header" style="margin-bottom: 10px;">
+                <h3 style="color: #2c3e50; font-size: 1.1em; margin-bottom: 8px;">Question:</h3>
+                <p style="color: #34495e; line-height: 1.4; font-size: 0.95em;">Based on this paragraph, how many times was Barros traded during his professional basketball career?</p>
+              </div>
+              <div class="sample-context" style="margin-bottom: 10px; padding: 10px; background-color: #fff; border-radius: 6px;">
+                <h3 style="color: #2c3e50; font-size: 1.1em; margin-bottom: 8px;">Context:</h3>
+                <div class="truncated-text" style="position: relative;">
+                  <p style="color: #34495e; line-height: 1.4; font-size: 0.95em; max-height: 4.2em; overflow: hidden; margin-bottom: 5px;">The 5' 11" (1.80 m), 165 lb (75 kg) point guard, began his professional career in 1989 when he was selected in the first round of the NBA draft by the Seattle SuperSonics with the 16th pick. Most of his time spent in Seattle was as a backup to point guard Gary Payton, who was considered to be a much more competent ball handler and defender, as Barros was deemed more usable at shooting guard. Prior to the 1993-201394 season, the Sonics traded Barros to the Charlotte Hornets in exchange for Kendall Gill. Two days later, Charlotte traded Barros, Sidney Green, and their 1993 draft choice, Greg Graham, to the Philadelphia 76ers for Hersey Hawkins. Barros became a free agent at the end of the 1994-95 NBA season. He signed with his hometown Boston Celtics, and remained for five seasons as a role player alongside David Wesley and Dee Brown and mentor to younger players such as Antoine Walker and Paul Pierce. In the offseason of 2000, Barros was traded to the Dallas Mavericks as part of a four-team deal that also involved the Utah Jazz and Golden State Warriors. By the time the 2000-201301 season had commenced, the Mavs had traded Barros to the Detroit Pistons, where he played 89 games over two seasons, averaging 7.5 points per game, until waiving him in 2002.</p>
+                  <div style="display: flex; justify-content: flex-end;">
+                    <button onclick="toggleText(this)" style="background: none; border: none; color: #2c3e50; cursor: pointer; font-size: 0.9em; padding: 2px 8px; border-radius: 4px; transition: background-color 0.2s;">Show more</button>
+                  </div>
+                </div>
+              </div>
+              <div class="sample-answer" style="padding: 10px; background-color: #fff; border-radius: 6px;">
+                <h3 style="color: #2c3e50; font-size: 1.1em; margin-bottom: 8px;">Answer:</h3>
+                <div class="truncated-text" style="position: relative;">
+                  <p style="color: #34495e; line-height: 1.4; font-size: 0.95em; max-height: 4.2em; overflow: hidden; margin-bottom: 5px;">Based on this paragraph, Barros was traded four times while in the NBA (from Seattle to Charlotte; from Charlotte to Philadelphia; from Boston to Dallas; from Dallas to Detroit).</p>
+                  <div style="display: flex; justify-content: flex-end;">
+                    <button onclick="toggleText(this)" style="background: none; border: none; color: #2c3e50; cursor: pointer; font-size: 0.9em; padding: 2px 8px; border-radius: 4px; transition: background-color 0.2s;">Show more</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sample 2 -->
+            <div class="sample-box" style="background-color: #f8f9fa; border-radius: 8px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); min-width: 400px; max-width: 400px; height: fit-content;">
+              <div class="sample-header" style="margin-bottom: 10px;">
+                <h3 style="color: #2c3e50; font-size: 1.1em; margin-bottom: 8px;">Question:</h3>
+                <p style="color: #34495e; line-height: 1.4; font-size: 0.95em;">What was the Tiryns culture</p>
+              </div>
+              <div class="sample-context" style="margin-bottom: 10px; padding: 10px; background-color: #fff; border-radius: 6px;">
+                <h3 style="color: #2c3e50; font-size: 1.1em; margin-bottom: 8px;">Context:</h3>
+                <div class="truncated-text" style="position: relative;">
+                  <p style="color: #34495e; line-height: 1.4; font-size: 0.95em; max-height: 4.2em; overflow: hidden; margin-bottom: 5px;">Tiryns culture (2,200 - 2,000 BC) or Early Helladic III was an Early Bronze Age culture in Central Greece, Southern Greece and the Ionian islands (Part of Western Greece) that followed Eutresis and Korakou cultures, and preceded the Mycenean civilization. The "center" of the culture was the settlement of Tiryns that saw further development during the Mycenean period.\\Metal and Terracotta: A unique pattern-painted dark to light human figurine appears in Tiryns culture's Lerna IV while old types of animal figurines do not continue. Metal is now more popular for the creation of weapons and tools, some examples are : A dagger, a nail, a pin from Lerna and three axes from Thebes.\\Pottery: The best known type of pottery consists of two classes of pattern-painted ceramics : 1) Patterned ware that is a dark on light class, mainly in the Peloponnese. The ornament is geometric and almost exclusively rectilinear. 2) Ayia Marina ware that is a light on dark class, mainly in Central Greece. The ornament is similar to patterned ware. The dark paint on both wares is moderately lustrous and appears to be descended directly from the Urfirnis paint on Early Helladic II period.\\Architecture: At Lerna and Olympia several "long houses" (megara) with two or three rooms and narrow alleyways are built. A tumulus is constructed over the ruins of the Helladic II House of the Tiles and for a long period no buildings are built in the specific area. Many large (for their period) buildings are constructed in Lerna but they often last for only one generation.\\End: In around 2,000 BC, Early Helladic III and generally the Early Helladic periods end. Tiryns culture is followed by the Middle Helladic culture and Mycenaean Greece</p>
+                  <div style="display: flex; justify-content: flex-end;">
+                    <button onclick="toggleText(this)" style="background: none; border: none; color: #2c3e50; cursor: pointer; font-size: 0.9em; padding: 2px 8px; border-radius: 4px; transition: background-color 0.2s;">Show more</button>
+                  </div>
+                </div>
+              </div>
+              <div class="sample-answer" style="padding: 10px; background-color: #fff; border-radius: 6px;">
+                <h3 style="color: #2c3e50; font-size: 1.1em; margin-bottom: 8px;">Answer:</h3>
+                <div class="truncated-text" style="position: relative;">
+                  <p style="color: #34495e; line-height: 1.4; font-size: 0.95em; max-height: 4.2em; overflow: hidden; margin-bottom: 5px;">Tiryns culture (2,200 - 2,000 BC) or Early Helladic III was an Early Bronze Age culture in Central Greece, Southern Greece and the Ionian islands (Part of Western Greece) that followed Eutresis and Korakou cultures, and preceded the Mycenean civilization. The \"center\" of the culture was the settlement of Tiryns that saw further development during the Mycenean period.\\\\Metal and Terracotta: A unique pattern-painted dark to light human figurine appears in Tiryns culture's Lerna IV while old types of animal figurines do not continue. Metal is now more popular for the creation of weapons and tools, some examples are : A dagger, a nail, a pin from Lerna and three axes from Thebes.\\\\Pottery: The best known type of pottery consists of two classes of pattern-painted ceramics: 1) Patterned ware that is a dark on light class, mainly in the Peloponnese. The ornament is geometric and almost exclusively rectilinear. 2) Ayia Marina ware that is a light on dark class, mainly in Central Greece. The ornament is similar to patterned ware. The dark paint on both wares is moderately lustrous and appears to be descended directly from the Urfirnis paint on Early Helladic II period.\\\\Architecture: At Lerna and Olympia several \"long houses\" (megara) with two or three rooms and narrow alleyways are built. A tumulus is constructed over the ruins of the Helladic II House of the Tiles and for a long period no buildings are built in the specific area. Many large (for their period) buildings are constructed in Lerna but they often last for only one generation.\\\\End: In around 2,000 BC, Early Helladic III and generally the Early Helladic periods end. Tiryns culture is followed by the Middle Helladic culture and Mycenaean Greece.</p>
+                  <div style="display: flex; justify-content: flex-end;">
+                    <button onclick="toggleText(this)" style="background: none; border: none; color: #2c3e50; cursor: pointer; font-size: 0.9em; padding: 2px 8px; border-radius: 4px; transition: background-color 0.2s;">Show more</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sample 3 -->
+            <div class="sample-box" style="background-color: #f8f9fa; border-radius: 8px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); min-width: 400px; max-width: 400px; height: fit-content;">
+              <div class="sample-header" style="margin-bottom: 10px;">
+                <h3 style="color: #2c3e50; font-size: 1.1em; margin-bottom: 8px;">Question:</h3>
+                <p style="color: #34495e; line-height: 1.4; font-size: 0.95em;">Given the reference text about "The New Deal", what are the "3 R's" historians refer to about the program?</p>
+              </div>
+              <div class="sample-context" style="margin-bottom: 10px; padding: 10px; background-color: #fff; border-radius: 6px;">
+                <h3 style="color: #2c3e50; font-size: 1.1em; margin-bottom: 8px;">Context:</h3>
+                <div class="truncated-text" style="position: relative;">
+                  <p style="color: #34495e; line-height: 1.4; font-size: 0.95em; max-height: 4.2em; overflow: hidden; margin-bottom: 5px;">The New Deal was a series of programs, public work projects, financial reforms, and regulations enacted by President Franklin D. Roosevelt in the United States between 1933 and 1939. Major federal programs and agencies included the Civilian Conservation Corps (CCC), the Works Progress Administration (WPA), the Civil Works Administration (CWA), the Farm Security Administration (FSA), the National Industrial Recovery Act of 1933 (NIRA) and the Social Security Administration (SSA). They provided support for farmers, the unemployed, youth, and the elderly. The New Deal included new constraints and safeguards on the banking industry and efforts to re-inflate the economy after prices had fallen sharply. New Deal programs included both laws passed by Congress as well as presidential executive orders during the first term of the presidency of Franklin D. Roosevelt.\\\\The programs focused on what historians refer to as the \"3 R's\": relief for the unemployed and for the poor, recovery of the economy back to normal levels, and reform of the financial system to prevent a repeat depression. The New Deal produced a political realignment, making the Democratic Party the majority (as well as the party that held the White House for seven out of the nine presidential terms from 1933 to 1969) with its base in progressive ideas, the South, big city machines and the newly empowered labor unions, and various ethnic groups. The Republicans were split, with progressive Republicans in support but conservatives opposing the entire New Deal as hostile to business and economic growth. The realignment crystallized into the New Deal coalition that dominated presidential elections into the 1960s while the opposing conservative coalition largely controlled Congress in domestic affairs from 1937 to 1964.</p>
+                  <div style="display: flex; justify-content: flex-end;">
+                    <button onclick="toggleText(this)" style="background: none; border: none; color: #2c3e50; cursor: pointer; font-size: 0.9em; padding: 2px 8px; border-radius: 4px; transition: background-color 0.2s;">Show more</button>
+                  </div>
+                </div>
+              </div>
+              <div class="sample-answer" style="padding: 10px; background-color: #fff; border-radius: 6px;">
+                <h3 style="color: #2c3e50; font-size: 1.1em; margin-bottom: 8px;">Answer:</h3>
+                <div class="truncated-text" style="position: relative;">
+                  <p style="color: #34495e; line-height: 1.4; font-size: 0.95em; max-height: 4.2em; overflow: hidden; margin-bottom: 5px;">The "3 R's" historians refer to are the following:\\- Relief for the unemployed and for the poor\\- Recovery of the economy back to normal levels\\- Reform of the financial system to prevent a repeat depression</p>
+                  <div style="display: flex; justify-content: flex-end;">
+                    <button onclick="toggleText(this)" style="background: none; border: none; color: #2c3e50; cursor: pointer; font-size: 0.9em; padding: 2px 8px; border-radius: 4px; transition: background-color 0.2s;">Show more</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sample 4 -->
+            <div class="sample-box" style="background-color: #f8f9fa; border-radius: 8px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); min-width: 400px; max-width: 400px; height: fit-content;">
+              <div class="sample-header" style="margin-bottom: 10px;">
+                <h3 style="color: #2c3e50; font-size: 1.1em; margin-bottom: 8px;">Question:</h3>
+                <p style="color: #34495e; line-height: 1.4; font-size: 0.95em;">Extract the Greek terms in the following paragraph, along with a short definition, in bullet points.</p>
+              </div>
+              <div class="sample-context" style="margin-bottom: 10px; padding: 10px; background-color: #fff; border-radius: 6px;">
+                <h3 style="color: #2c3e50; font-size: 1.1em; margin-bottom: 8px;">Context:</h3>
+                <div class="truncated-text" style="position: relative;">
+                  <p style="color: #34495e; line-height: 1.4; font-size: 0.95em; max-height: 4.2em; overflow: hidden; margin-bottom: 5px;">Meno is a Socratic dialogue by Plato. Meno begins the dialogue by asking Socrates whether virtue is taught, acquired by practice, or comes by nature. In order to determine whether virtue is teachable or not, Socrates tells Meno that they first need to determine what virtue is. When the characters speak of virtue, or rather arete, they refer to virtue in general, rather than particular virtues, such as justice or temperance. The first part of the work showcases Socratic dialectical style; Meno, unable to adequately define virtue, is reduced to confusion or aporia. Socrates suggests that they seek an adequate definition for virtue together. In response, Meno suggests that it is impossible to seek what one does not know, because one will be unable to determine whether one has found it. \\Socrates challenges Meno's argument, often called "Meno's Paradox" or the "Learner's Paradox," by introducing the theory of knowledge as recollection (anamnesis). As presented in the dialogue, the theory proposes that souls are immortal and know all things in a disembodied state; learning in the embodied is actually a process of recollecting that which the soul knew before it came into a body. Socrates demonstrates recollection in action by posing a mathematical puzzle to one of Meno's slaves. Subsequently, Socrates and Meno return to the question of whether virtue is teachable, employing the method of hypothesis. \\ Near the end of the dialogue, Meno poses another famous puzzle, called "The Meno Problem" or "The Value Problem for Knowledge," which questions why knowledge is valued more highly than true belief. In response, Socrates provides a famous and somewhat enigmatic distinction between knowledge and true belief.</p>
+                  <div style="display: flex; justify-content: flex-end;">
+                    <button onclick="toggleText(this)" style="background: none; border: none; color: #2c3e50; cursor: pointer; font-size: 0.9em; padding: 2px 8px; border-radius: 4px; transition: background-color 0.2s;">Show more</button>
+                  </div>
+                </div>
+              </div>
+              <div class="sample-answer" style="padding: 10px; background-color: #fff; border-radius: 6px;">
+                <h3 style="color: #2c3e50; font-size: 1.1em; margin-bottom: 8px;">Answer:</h3>
+                <div class="truncated-text" style="position: relative;">
+                  <p style="color: #34495e; line-height: 1.4; font-size: 0.95em; max-height: 4.2em; overflow: hidden; margin-bottom: 5px;">- arete: virtues in general, i.e. instead of a particular virtue\\- aporia: confusion\\- anamnesis: recollection of knowledge</p>
+                  <div style="display: flex; justify-content: flex-end;">
+                    <button onclick="toggleText(this)" style="background: none; border: none; color: #2c3e50; cursor: pointer; font-size: 0.9em; padding: 2px 8px; border-radius: 4px; transition: background-color 0.2s;">Show more</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="sample-box" style="background-color: #f8f9fa; border-radius: 8px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); min-width: 400px; max-width: 400px; height: fit-content;">
+              <div class="sample-header" style="margin-bottom: 10px;">
+                <h3 style="color: #2c3e50; font-size: 1.1em; margin-bottom: 8px;">Question:</h3>
+                <p style="color: #34495e; line-height: 1.4; font-size: 0.95em;">In 1961 which Henry Mancini record won Grammy record of year</p>
+              </div>
+              <div class="sample-context" style="margin-bottom: 10px; padding: 10px; background-color: #fff; border-radius: 6px;">
+                <h3 style="color: #2c3e50; font-size: 1.1em; margin-bottom: 8px;">Context:</h3>
+                <div class="truncated-text" style="position: relative;">
+                  <p style="color: #34495e; line-height: 1.4; font-size: 0.95em; max-height: 4.2em; overflow: hidden; margin-bottom: 5px;">None</p>
+                  <div style="display: flex; justify-content: flex-end;">
+                    <button onclick="toggleText(this)" style="background: none; border: none; color: #2c3e50; cursor: pointer; font-size: 0.9em; padding: 2px 8px; border-radius: 4px; transition: background-color 0.2s;">Show more</button>
+                  </div>
+                </div>
+              </div>
+              <div class="sample-answer" style="padding: 10px; background-color: #fff; border-radius: 6px;">
+                <h3 style="color: #2c3e50; font-size: 1.1em; margin-bottom: 8px;">Answer:</h3>
+                <div class="truncated-text" style="position: relative;">
+                  <p style="color: #34495e; line-height: 1.4; font-size: 0.95em; max-height: 4.2em; overflow: hidden; margin-bottom: 5px;">Moon River</p>
+                  <div style="display: flex; justify-content: flex-end;">
+                    <button onclick="toggleText(this)" style="background: none; border: none; color: #2c3e50; cursor: pointer; font-size: 0.9em; padding: 2px 8px; border-radius: 4px; transition: background-color 0.2s;">Show more</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <script>
+        function toggleText(button) {
+          const textContainer = button.closest('.truncated-text');
+          const text = textContainer.querySelector('p');
+          if (text.style.maxHeight === 'none') {
+            text.style.maxHeight = '4.2em';
+            button.textContent = 'Show more';
+          } else {
+            text.style.maxHeight = 'none';
+            button.textContent = 'Show less';
+          }
+        }
+        </script>
+      </div>
+    </div>
+    <!--/ Abstract. -->
+  </div>
+</section>
+
+
+
+
+<section class="section" id="BibTeX">
+  <div class="container is-max-desktop content">
+    <h2 class="title">BibTeX</h2>
+    <pre><code>@article{guan2025benign,
+      title={Benign Samples Matter! Fine-tuning On Outlier Benign Samples Severely Breaks Safety},
+      author={Guan, Zihan and Hu, Mengxuan and Zhu, Ronghang and Li, Sheng and Vullikanti, Anil},
+      journal={arXiv preprint arXiv:2505.06843},
+      year={2025}
+}</code></pre>
+  </div>
+</section>
+
+
+<footer class="footer">
+  <div class="container">
+    <div class="content has-text-centered">
+      <a class="icon-link"
+         href="./static/videos/nerfies_paper.pdf">
+        <i class="fas fa-file-pdf"></i>
+      </a>
+      <a class="icon-link" href="https://github.com/keunhong" class="external-link" disabled>
+        <i class="fab fa-github"></i>
+      </a>
+    </div>
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content">
+          <p>
+            This website is licensed under a <a rel="license"
+                                                href="http://creativecommons.org/licenses/by-sa/4.0/">Creative
+            Commons Attribution-ShareAlike 4.0 International License</a>.
+          </p>
+          <p>
+            This website is built on top of <a href="https://nerfies.github.io">Nerfies</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
